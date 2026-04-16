@@ -1,0 +1,17 @@
+[
+  {
+    "Name": "Sample RTSP Camera",
+    "Source": "rtsp://127.0.0.1:8554/test",
+    "Enabled": true
+  },
+  {
+    "Name": "Sample UDP Camera",
+    "Source": "udp://@239.0.0.1:1234",
+    "Enabled": true
+  },
+  {
+    "Name": "Sample HTTP Stream",
+    "Source": "http://archive.org/download/SampleMpeg4_201307/sample_mpeg4.mp4",
+    "Enabled": true
+  }
+]

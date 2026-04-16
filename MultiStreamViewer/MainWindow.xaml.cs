@@ -1,13 +1,5 @@
-﻿using System.Text;
-using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+﻿using System.Windows;
+using MultiStreamViewer.ViewModels;
 
 namespace MultiStreamViewer
 {
@@ -16,8 +8,20 @@ namespace MultiStreamViewer
 	/// </summary>
 	public partial class MainWindow : Window
 	{
-		public MainWindow() {
+		private readonly MainWindowViewModel _vm;
+
+		public MainWindow()
+		{
 			InitializeComponent();
+			_vm = new MainWindowViewModel();
+			DataContext = _vm;
+		}
+
+		protected override void OnClosed(System.EventArgs e)
+		{
+			base.OnClosed(e);
+			_vm.StopAll();
+			_vm.DisposeAll();
 		}
 	}
 }
