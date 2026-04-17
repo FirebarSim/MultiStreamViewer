@@ -1,13 +1,18 @@
-﻿using System.Windows;
+﻿using MultiStreamViewer.ViewModels;
+using System.Windows;
 using System.Windows.Controls;
-using MultiStreamViewer.ViewModels;
+using System.Windows.Media;
 
 namespace MultiStreamViewer
 {
 	/// <summary>
 	/// Interaction logic for CameraView.xaml
 	/// </summary>
-	public partial class CameraView : UserControl {
+	public partial class CameraView : UserControl
+	{
+		FullscreenWindow fullscreenWindow;
+		Panel originalParent;
+
 
 		public CameraView() {
 			InitializeComponent();
