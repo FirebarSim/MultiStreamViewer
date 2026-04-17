@@ -1,6 +1,4 @@
-﻿using MultiStreamViewer.Services;
-using MultiStreamViewer.ViewModels;
-using System.Windows;
+﻿using System.Windows;
 
 namespace MultiStreamViewer
 {

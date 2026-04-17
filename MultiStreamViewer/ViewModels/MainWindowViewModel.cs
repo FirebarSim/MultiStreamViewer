@@ -2,9 +2,6 @@ using Microsoft.Extensions.Options;
 using MultiStreamViewer.Models;
 using MultiStreamViewer.Services;
 using System.Collections.ObjectModel;
-using System.IO;
-using System.Text.Json;
-using System.Windows.Input;
 
 namespace MultiStreamViewer.ViewModels
 {
