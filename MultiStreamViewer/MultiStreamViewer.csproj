@@ -9,9 +9,15 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="streams.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <Content Include="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CommunityToolkit.Mvvm" Version="8.4.2" />
+    <PackageReference Include="FFME.Windows" Version="7.0.361-beta.1" />
+    <PackageReference Include="Microsoft.Extensions.Hosting" Version="11.0.0-preview.3.26207.106" />
   </ItemGroup>
 
 </Project>

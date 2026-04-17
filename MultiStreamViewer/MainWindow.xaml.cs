@@ -1,5 +1,6 @@
-﻿using System.Windows;
+﻿using MultiStreamViewer.Services;
 using MultiStreamViewer.ViewModels;
+using System.Windows;
 
 namespace MultiStreamViewer
 {
@@ -8,20 +9,14 @@ namespace MultiStreamViewer
 	/// </summary>
 	public partial class MainWindow : Window
 	{
-		private readonly MainWindowViewModel _vm;
-
-		public MainWindow()
-		{
+		public MainWindow() {
 			InitializeComponent();
-			_vm = new MainWindowViewModel();
-			DataContext = _vm;
 		}
 
 		protected override void OnClosed(System.EventArgs e)
 		{
 			base.OnClosed(e);
-			_vm.StopAll();
-			_vm.DisposeAll();
+			if(DataContext is IDisposable d) d.Dispose();
 		}
 	}
 }

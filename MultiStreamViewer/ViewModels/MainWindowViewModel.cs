@@ -1,4 +1,6 @@
+using Microsoft.Extensions.Options;
 using MultiStreamViewer.Models;
+using MultiStreamViewer.Services;
 using System.Collections.ObjectModel;
 using System.IO;
 using System.Text.Json;
@@ -6,65 +8,39 @@ using System.Windows.Input;
 
 namespace MultiStreamViewer.ViewModels
 {
-    public class MainWindowViewModel
+    public class MainWindowViewModel: IDisposable
     {
-        public ObservableCollection<CameraViewModel> Streams { get; } = new ObservableCollection<CameraViewModel>();
+        public ObservableCollection<CameraStream> Streams { get; } = new ObservableCollection<CameraStream>();
+		public ObservableCollection<CameraViewModel> Cameras { get; } = new ObservableCollection<CameraViewModel>();
 
-        public ICommand StartAllCommand { get; }
-        public ICommand StopAllCommand { get; }
+        public MainWindowViewModel( IFFmpegConfigService fFmpegConfigService, IStreamsService streamsService ) {
+			Unosquare.FFME.Library.FFmpegDirectory = fFmpegConfigService.GetFFmpegDirectory();
+			Unosquare.FFME.MediaElement.FFmpegMessageLogged += MediaElement_FFmpegMessageLogged;
+			System.Diagnostics.Debug.WriteLine( $"MainWindowViewModel: FFmpeg Directory set to: {Unosquare.FFME.Library.FFmpegDirectory}");
 
-        public MainWindowViewModel()
-        {
-            StartAllCommand = new RelayCommand(_ => StartAll());
-            StopAllCommand = new RelayCommand(_ => StopAll());
-
-            LoadConfig();
+            LoadStreams( streamsService );
         }
 
-        private void LoadConfig()
+		private void MediaElement_FFmpegMessageLogged( object? sender, Unosquare.FFME.Common.MediaLogMessageEventArgs e ) {
+			System.Diagnostics.Debug.WriteLine( $"FFmpeg: {e.Message}" );
+		}
+
+		private void LoadStreams( IStreamsService streamsService )
         {
-            try
-            {
-                var path = Path.Combine(System.AppDomain.CurrentDomain.BaseDirectory, "streams.json");
-                CameraStream[]? list = null;
-
-                if (File.Exists(path))
+			// Load the stream list from appsettings.json
+			try {
+                foreach (var s in streamsService.GetStreams())
                 {
-                    var json = File.ReadAllText(path);
-                    list = JsonSerializer.Deserialize<CameraStream[]>(json);
-                }
-
-                // If no config present, provide a small default prototype list
-                if (list == null || list.Length == 0)
-                {
-                    list = new[]
-                    {
-                        new CameraStream { Name = "Sample RTSP", Source = "rtsp://your_rtsp_server/stream", Enabled = true },
-                        new CameraStream { Name = "Sample UDP", Source = "udp://@239.0.0.1:1234", Enabled = true }
-                    };
-                }
-
-                foreach (var s in list)
-                {
-                    Streams.Add(new CameraViewModel(s));
+                    Streams.Add(s);
+                    //Streams.Add(new CameraViewModel(s));
                 }
             }
             catch { }
         }
 
-        public void StartAll()
+        public void Dispose()
         {
-            foreach (var s in Streams) s.Start();
-        }
-
-        public void StopAll()
-        {
-            foreach (var s in Streams) s.Stop();
-        }
-
-        public void DisposeAll()
-        {
-            foreach (var s in Streams) s.Dispose();
+            foreach (var c in Cameras ) c.Dispose();
         }
     }
 }

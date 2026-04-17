@@ -1,82 +1,137 @@
 using MultiStreamViewer.Models;
-using MultiStreamViewer.Services;
-using System;
 using System.ComponentModel;
-using System.IO;
-using System.Threading.Tasks;
-using System.Windows;
 using System.Windows.Input;
-using System.Windows.Media.Imaging;
+using CommunityToolkit.Mvvm.ComponentModel;
 
 namespace MultiStreamViewer.ViewModels
 {
-    public class CameraViewModel : INotifyPropertyChanged
-    {
-        public CameraStream Model { get; }
-        private readonly FfmpegFrameService _service;
+	public partial class CameraViewModel : ObservableObject, IDisposable
+	{
+		private Unosquare.FFME.MediaElement _media;
 
-        private BitmapImage? _imageSource;
-        public BitmapImage? ImageSource
-        {
-            get => _imageSource;
-            private set
-            {
-                _imageSource = value;
-                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(ImageSource)));
-            }
-        }
+		[ObservableProperty]
+		private CameraStream _model;
 
-        public ICommand StartCommand { get; }
-        public ICommand StopCommand { get; }
+		[ObservableProperty]
+		private bool _logoVisible = true;
 
-        public event PropertyChangedEventHandler? PropertyChanged;
+		[ObservableProperty]
+		private bool _statusMessageVisible;
 
-        public CameraViewModel(CameraStream model)
-        {
-            Model = model;
-            _service = new FfmpegFrameService(model.Source);
-            _service.FrameReady += OnFrameReady;
+		[ObservableProperty]
+		private string? _statusMessage;
+		
+		partial void OnStatusMessageChanged( string? value ) {
+			if(string.IsNullOrWhiteSpace(value)) StatusMessageVisible = false;
+			else StatusMessageVisible = true;
+		}
 
-            StartCommand = new RelayCommand(_ => Start());
-            StopCommand = new RelayCommand(_ => Stop());
-        }
+		public ICommand OpenCommand { get; }
+		public ICommand PlayCommand { get; }
+		public ICommand PauseCommand { get; }
+		public ICommand StopCommand { get; }
+		public ICommand CloseCommand { get; }
 
-        private void OnFrameReady(byte[] frame)
-        {
-            // convert to BitmapImage on UI thread
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                try
-                {
-                    using var ms = new MemoryStream(frame);
-                    var bi = new BitmapImage();
-                    bi.BeginInit();
-                    bi.CacheOption = BitmapCacheOption.OnLoad;
-                    bi.StreamSource = ms;
-                    bi.EndInit();
-                    bi.Freeze();
-                    ImageSource = bi;
-                }
-                catch { }
-            });
-        }
+		public CameraViewModel( CameraStream model ) {
+			Model = model;
+			OpenCommand = new RelayCommand( _ => Open() );
+			PlayCommand = new RelayCommand( _ => Play() );
+			PauseCommand = new RelayCommand( _ => Pause() );
+			StopCommand = new RelayCommand( _ => Stop() );
+			CloseCommand = new RelayCommand( _ => Close() );
+		}
 
-        public void Start()
-        {
-            if (!Model.Enabled)
-                return;
+		public void AttachMedia( Unosquare.FFME.MediaElement media ) {
+			_media = media;
 
-            try { _service.Start(); } catch { }
-        }
+			_media.MediaInitializing += ( s, e ) => {
+				StatusMessage = "Initializing...";
+			};
 
-        public void Stop()
-        {
-            try { _service.Stop(); } catch { }
-        }
+			_media.MediaOpening += ( s, e ) => {
+				StatusMessage = "Opening...";
+			};
 
-        public void Dispose()
-        {
-            _service.Dispose();
-        }
-    }
+			_media.MediaOpened += ( s, e ) => {
+				StatusMessage = "Opened...";
+			};
+
+			_media.MediaReady += async ( s, e ) => {
+				StatusMessage = null;
+				await _media.Play();
+			};
+
+			//_media.MediaClosed += ( s, e ) => {
+			//	StatusMessage = "Media Closed...";
+			//};
+
+			_media.MediaChanging += ( s, e ) => {
+				StatusMessage = "Changing Media...";
+			};
+
+			//_media.AudioDeviceStopped += ( s, e ) => {
+			//	System.Diagnostics.Debug.WriteLine( $"CameraViewModel: Audio Device Stopped: {Model.Name}" );
+			//};
+
+			_media.MediaChanged += ( s, e ) => {
+				StatusMessage = "Media Changed...";
+			};
+
+			//_media.PositionChanged += ( s, e ) => {
+			//	System.Diagnostics.Debug.WriteLine( $"CameraViewModel: Position Changed: {Model.Name}" );
+			//};
+
+			_media.MediaFailed += ( s, e ) => {
+				System.Diagnostics.Debug.WriteLine( $"CameraViewModel: Media Failed ({Model.Name}) {e.ErrorException.Message}" );
+				StatusMessage = "Failed...";
+			};
+
+			//_media.MessageLogged += ( s, e ) => {
+			//	System.Diagnostics.Debug.WriteLine( $"CameraViewModel: Messsage Logged: {Model.Name}: {e.Message}" );
+			//};
+
+			_media.MediaStateChanged += ( s, e ) => {
+				System.Diagnostics.Debug.WriteLine( $"CameraViewModel: Media State Changed: {Model.Name}: {e.MediaState}" );
+			};
+
+			_media.MediaStateChanged += ( s, e ) => {
+				switch( e.MediaState ) {
+					case Unosquare.FFME.Common.MediaPlaybackState.Close:
+					case Unosquare.FFME.Common.MediaPlaybackState.Stop:
+						LogoVisible = true;
+						break;
+					default:
+						LogoVisible = false;
+						break;
+				}
+			};
+
+			//_media.DataFrameReceived += OnDataFrameReceived;
+
+		}
+
+		public async void Open() {
+			await _media.Open( new Uri( Model.Source ) );
+		}
+
+		public async void Play() {
+			await _media.Play();
+		}
+
+		public async void Pause() {
+			await _media.Pause();
+		}
+
+		public async void Stop() {
+			await _media.Stop();
+		}
+
+		public async void Close() {
+			await _media.Close();
+		}
+
+		public void Dispose() {
+			if( _media != null ) _media.Dispose();
+		}
+	}
 }

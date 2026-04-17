@@ -4,44 +4,39 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:MultiStreamViewer"
+        xmlns:vm="clr-namespace:MultiStreamViewer.ViewModels"
         mc:Ignorable="d"
         Title="MainWindow" Height="600" Width="1000">
+    <Window.DataContext>
+        <local:ResolveExtension Type="{x:Type vm:MainWindowViewModel}" />
+    </Window.DataContext>
     <Grid>
-        <DockPanel>
-            <StackPanel Orientation="Horizontal" DockPanel.Dock="Top" Margin="6">
-                <Button Content="Start All" Width="80" Margin="2" Command="{Binding StartAllCommand}" />
-                <Button Content="Stop All" Width="80" Margin="2" Command="{Binding StopAllCommand}" />
-            </StackPanel>
-
-            <ScrollViewer VerticalScrollBarVisibility="Auto">
-                <ItemsControl ItemsSource="{Binding Streams}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <WrapPanel IsItemsHost="True" />
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Border BorderBrush="Gray" BorderThickness="1" Margin="6" Padding="6" Width="320" Height="240">
-                                <Grid>
-                                    <Grid.RowDefinitions>
-                                        <RowDefinition Height="Auto" />
-                                        <RowDefinition Height="*" />
-                                        <RowDefinition Height="Auto" />
-                                    </Grid.RowDefinitions>
-                                    <TextBlock Text="{Binding Model.Name}" FontWeight="Bold" />
-                                    <Image Grid.Row="1" Source="{Binding ImageSource}" Stretch="Uniform" />
-                                    <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
-                                        <Button Content="Start" Width="60" Margin="2" Command="{Binding StartCommand}" />
-                                        <Button Content="Stop" Width="60" Margin="2" Command="{Binding StopCommand}" />
-                                    </StackPanel>
-                                </Grid>
-                            </Border>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
-        </DockPanel>
-
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+        </Grid.RowDefinitions>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="Auto" />
+            <ColumnDefinition Width="*" />
+        </Grid.ColumnDefinitions>
+        <ListView Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Streams}" >
+            <ListView.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Name}" Padding="5" />
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+        <ItemsControl Grid.Row="1" Grid.Column="1" ItemsSource="{Binding Cameras}">
+            <ItemsControl.Resources>
+                <DataTemplate DataType="{x:Type vm:CameraViewModel}">
+                    <local:CameraView />
+                </DataTemplate>
+            </ItemsControl.Resources>
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <UniformGrid IsItemsHost="True" Columns="{Binding Columns}" Rows="{Binding Rows}" />
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+        </ItemsControl>
     </Grid>
 </Window>
