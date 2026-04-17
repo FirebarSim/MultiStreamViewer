@@ -17,5 +17,9 @@ namespace MultiStreamViewer
 		private void OnLoaded( object sender, RoutedEventArgs e ) {
 			if( DataContext is CameraViewModel vm ) vm.AttachMedia( Media );
 		}
+
+		private void Border_Drop( object sender, DragEventArgs e ) {
+			if( DataContext is CameraViewModel vm ) vm.DropCommand.Execute( e.Data );
+		}
 	}
 }

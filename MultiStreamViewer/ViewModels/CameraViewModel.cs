@@ -1,6 +1,8 @@
 using MultiStreamViewer.Models;
-using System.Windows.Input;
 using CommunityToolkit.Mvvm.ComponentModel;
+using CommunityToolkit.Mvvm.Input;
+using System.Diagnostics;
+using System.Windows;
 
 namespace MultiStreamViewer.ViewModels
 {
@@ -9,7 +11,19 @@ namespace MultiStreamViewer.ViewModels
 		private Unosquare.FFME.MediaElement _media;
 
 		[ObservableProperty]
-		private CameraStream _model;
+		private CameraStream? _model;
+
+		partial void OnModelChanged( CameraStream? oldValue, CameraStream? newValue ) {
+			if( oldValue != null ) CloseCommand.Execute( null );
+			if( newValue != null ) {
+				ModelName = newValue.Name;
+				OpenCommand.Execute( null );
+			}
+			else ModelName = string.Empty;
+		}
+
+		[ObservableProperty]
+		private string _modelName = string.Empty;
 
 		[ObservableProperty]
 		private bool _logoVisible = true;
@@ -19,25 +33,10 @@ namespace MultiStreamViewer.ViewModels
 
 		[ObservableProperty]
 		private string? _statusMessage;
-		
+
 		partial void OnStatusMessageChanged( string? value ) {
-			if(string.IsNullOrWhiteSpace(value)) StatusMessageVisible = false;
+			if( string.IsNullOrWhiteSpace( value ) ) StatusMessageVisible = false;
 			else StatusMessageVisible = true;
-		}
-
-		public ICommand OpenCommand { get; }
-		public ICommand PlayCommand { get; }
-		public ICommand PauseCommand { get; }
-		public ICommand StopCommand { get; }
-		public ICommand CloseCommand { get; }
-
-		public CameraViewModel( CameraStream model ) {
-			Model = model;
-			OpenCommand = new RelayCommand( _ => Open() );
-			PlayCommand = new RelayCommand( _ => Play() );
-			PauseCommand = new RelayCommand( _ => Pause() );
-			StopCommand = new RelayCommand( _ => Stop() );
-			CloseCommand = new RelayCommand( _ => Close() );
 		}
 
 		public void AttachMedia( Unosquare.FFME.MediaElement media ) {
@@ -81,7 +80,7 @@ namespace MultiStreamViewer.ViewModels
 			//};
 
 			_media.MediaFailed += ( s, e ) => {
-				System.Diagnostics.Debug.WriteLine( $"CameraViewModel: Media Failed ({Model.Name}) {e.ErrorException.Message}" );
+				System.Diagnostics.Debug.WriteLine( $"CameraViewModel: Media Failed {e.ErrorException.Message}" );
 				StatusMessage = "Failed...";
 			};
 
@@ -90,7 +89,7 @@ namespace MultiStreamViewer.ViewModels
 			//};
 
 			_media.MediaStateChanged += ( s, e ) => {
-				System.Diagnostics.Debug.WriteLine( $"CameraViewModel: Media State Changed: {Model.Name}: {e.MediaState}" );
+				System.Diagnostics.Debug.WriteLine( $"CameraViewModel: Media State Changed to {e.MediaState}" );
 			};
 
 			_media.MediaStateChanged += ( s, e ) => {
@@ -109,24 +108,34 @@ namespace MultiStreamViewer.ViewModels
 
 		}
 
-		public async void Open() {
+		[RelayCommand]
+		private async Task Open() {
+			if( Model == null ) return;
 			await _media.Open( new Uri( Model.Source ) );
 		}
 
-		public async void Play() {
+		[RelayCommand]
+		private async Task Play() {
 			await _media.Play();
 		}
 
-		public async void Pause() {
+		[RelayCommand]
+		private async Task Pause() {
 			await _media.Pause();
 		}
 
-		public async void Stop() {
-			await _media.Stop();
+		[RelayCommand]
+		private async Task Close() {
+			await _media.Close();
+			Model = null;
 		}
 
-		public async void Close() {
-			await _media.Close();
+		[RelayCommand]
+		private void Drop( DataObject droppedItem ) {
+			var stream = droppedItem.GetData( typeof( CameraStream ));
+			if ( stream is CameraStream cameraStream ) {
+				Model = cameraStream;
+			}
 		}
 
 		public void Dispose() {

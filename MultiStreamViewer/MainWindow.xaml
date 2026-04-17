@@ -19,10 +19,10 @@
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        <ListView Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Streams}" >
+        <ListView x:Name="StreamList" Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Streams}" >
             <ListView.ItemTemplate>
                 <DataTemplate>
-                    <TextBlock Text="{Binding Name}" Padding="5" />
+                    <TextBlock Text="{Binding Name}" MouseMove="TextBlock_MouseMove" Padding="5" />
                 </DataTemplate>
             </ListView.ItemTemplate>
         </ListView>
