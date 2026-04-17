@@ -8,7 +8,7 @@ namespace MultiStreamViewer.ViewModels
 {
 	public partial class CameraViewModel : ObservableObject, IDisposable
 	{
-		private Unosquare.FFME.MediaElement _media;
+		public Unosquare.FFME.MediaElement Media { get; protected set; }
 
 		[ObservableProperty]
 		private CameraStream? _model;
@@ -20,6 +20,7 @@ namespace MultiStreamViewer.ViewModels
 				OpenCommand.Execute( null );
 			}
 			else ModelName = string.Empty;
+			Debug.WriteLine( $"CameraViewModel: Info : Model changed from '{oldValue?.Name}' to '{newValue?.Name}'" );
 		}
 
 		[ObservableProperty]
@@ -40,30 +41,31 @@ namespace MultiStreamViewer.ViewModels
 		}
 
 		public void AttachMedia( Unosquare.FFME.MediaElement media ) {
-			_media = media;
+			Media = media;
 
-			_media.MediaInitializing += ( s, e ) => {
+			Media.MediaInitializing += ( s, e ) => {
 				StatusMessage = "Initializing...";
 			};
 
-			_media.MediaOpening += ( s, e ) => {
+			Media.MediaOpening += ( s, e ) => {
 				StatusMessage = "Opening...";
 			};
 
-			_media.MediaOpened += ( s, e ) => {
+			Media.MediaOpened += ( s, e ) => {
 				StatusMessage = "Opened...";
 			};
 
-			_media.MediaReady += async ( s, e ) => {
+			Media.MediaReady += async ( s, e ) => {
+				System.Diagnostics.Debug.WriteLine( $"CameraViewModel: Debug : Media Ready" );
 				StatusMessage = null;
-				await _media.Play();
+				await Media.Play();
 			};
 
-			//_media.MediaClosed += ( s, e ) => {
-			//	StatusMessage = "Media Closed...";
-			//};
+			Media.MediaClosed += ( s, e ) => {
+				System.Diagnostics.Debug.WriteLine( $"CameraViewModel: Debug : Media Closed" );
+			};
 
-			_media.MediaChanging += ( s, e ) => {
+			Media.MediaChanging += ( s, e ) => {
 				StatusMessage = "Changing Media...";
 			};
 
@@ -71,7 +73,7 @@ namespace MultiStreamViewer.ViewModels
 			//	System.Diagnostics.Debug.WriteLine( $"CameraViewModel: Audio Device Stopped: {Model.Name}" );
 			//};
 
-			_media.MediaChanged += ( s, e ) => {
+			Media.MediaChanged += ( s, e ) => {
 				StatusMessage = "Media Changed...";
 			};
 
@@ -79,24 +81,46 @@ namespace MultiStreamViewer.ViewModels
 			//	System.Diagnostics.Debug.WriteLine( $"CameraViewModel: Position Changed: {Model.Name}" );
 			//};
 
-			_media.MediaFailed += ( s, e ) => {
+			Media.MediaFailed += ( s, e ) => {
 				System.Diagnostics.Debug.WriteLine( $"CameraViewModel: Media Failed {e.ErrorException.Message}" );
 				StatusMessage = "Failed...";
 			};
 
-			//_media.MessageLogged += ( s, e ) => {
-			//	System.Diagnostics.Debug.WriteLine( $"CameraViewModel: Messsage Logged: {Model.Name}: {e.Message}" );
-			//};
-
-			_media.MediaStateChanged += ( s, e ) => {
-				System.Diagnostics.Debug.WriteLine( $"CameraViewModel: Media State Changed to {e.MediaState}" );
+			Media.MessageLogged += ( s, e ) => {
+				switch( e.MessageType ) {
+					//case Unosquare.FFME.Common.MediaLogMessageType.None:
+					//	break;
+					//case Unosquare.FFME.Common.MediaLogMessageType.Trace:
+					//	break;
+					case Unosquare.FFME.Common.MediaLogMessageType.Info:
+					case Unosquare.FFME.Common.MediaLogMessageType.Debug:
+					case Unosquare.FFME.Common.MediaLogMessageType.Error:
+					case Unosquare.FFME.Common.MediaLogMessageType.Warning:
+						System.Diagnostics.Debug.WriteLine( $"CameraViewModel: {e.MessageType} : {e.Message}" );
+						break;
+					default:
+						break;
+				}
 			};
 
-			_media.MediaStateChanged += ( s, e ) => {
+			Media.MediaStateChanged += ( s, e ) => {
+				System.Diagnostics.Debug.WriteLine( $"CameraViewModel: Info : Media State Changed to {e.MediaState}" );
 				switch( e.MediaState ) {
+					case Unosquare.FFME.Common.MediaPlaybackState.Play:
+						LogoVisible = false;
+						CanPause = true;
+						CanPlay = false;
+						break;
+					case Unosquare.FFME.Common.MediaPlaybackState.Pause:
+						LogoVisible = false;
+						CanPause = false;
+						CanPlay = true;
+						break;
 					case Unosquare.FFME.Common.MediaPlaybackState.Close:
 					case Unosquare.FFME.Common.MediaPlaybackState.Stop:
 						LogoVisible = true;
+						CanPause = false;
+						CanPlay = false;
 						break;
 					default:
 						LogoVisible = false;
@@ -111,35 +135,58 @@ namespace MultiStreamViewer.ViewModels
 		[RelayCommand]
 		private async Task Open() {
 			if( Model == null ) return;
-			await _media.Open( new Uri( Model.Source ) );
+			await Media.Open( new Uri( Model.Source ) );
 		}
+
+		[ObservableProperty]
+		private bool _canPause;
 
 		[RelayCommand]
 		private async Task Play() {
-			await _media.Play();
+			await Media.Play();
 		}
+
+		[ObservableProperty]
+		private bool _canPlay;
 
 		[RelayCommand]
 		private async Task Pause() {
-			await _media.Pause();
+			await Media.Pause();
 		}
 
 		[RelayCommand]
 		private async Task Close() {
-			await _media.Close();
+			await Media.Close();
 			Model = null;
+		}
+
+		[ObservableProperty]
+		private bool _isMuted;
+
+		[RelayCommand]
+		private async Task Mute() {
+			Media.IsMuted = true;
+			IsMuted = true;
+			System.Diagnostics.Debug.WriteLine( $"CameraViewModel: Info : Media Muted" );
+		}
+
+		[RelayCommand]
+		private async Task Unmute() {
+			Media.IsMuted = false;
+			IsMuted = false;
+			System.Diagnostics.Debug.WriteLine( $"CameraViewModel: Info : Media Unmuted" );
 		}
 
 		[RelayCommand]
 		private void Drop( DataObject droppedItem ) {
-			var stream = droppedItem.GetData( typeof( CameraStream ));
-			if ( stream is CameraStream cameraStream ) {
+			var stream = droppedItem.GetData( typeof( CameraStream ) );
+			if( stream is CameraStream cameraStream ) {
 				Model = cameraStream;
 			}
 		}
 
 		public void Dispose() {
-			if( _media != null ) _media.Dispose();
+			if( Media != null ) Media.Dispose();
 		}
 	}
 }

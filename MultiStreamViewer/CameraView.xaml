@@ -16,12 +16,33 @@
             </Grid.RowDefinitions>
             <TextBlock Text="{Binding ModelName}" FontWeight="Bold" />
             <ffme:MediaElement Grid.Row="1" x:Name="Media" Background="Black" LoadedBehavior="Manual" UnloadedBehavior="Manual" Stretch="Uniform" />
-            <TextBlock Grid.Row="1" Background="Red" Foreground="White" Text="BAE SYSTEMS" FontFamily="Franklin Gothic Heavy" FontStretch="ExtraExpanded" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="5,2.5,5,2.5" Visibility="{Binding LogoVisible, Converter={StaticResource BooleanToVisibilityConverter}}" />
+            <TextBlock Grid.Row="1" Background="Red" Foreground="White" Text="BAE SYSTEMS" FontFamily="Franklin Gothic Heavy" FontStretch="ExtraExpanded" HorizontalAlignment="Center" VerticalAlignment="Center" Padding="5,2.5,5,2.5" Visibility="{Binding LogoVisible, Converter={StaticResource BooleanToVisibilityConverter}, FallbackValue=Collapsed}" />
             <TextBlock Grid.Row="1" HorizontalAlignment="Center" VerticalAlignment="Bottom" Background="Black" Padding="3,1,3,1" Text="{Binding StatusMessage, FallbackValue='StatusMessage'}"  Visibility="{Binding StatusMessageVisible, Converter={StaticResource BooleanToVisibilityConverter}}" />
             <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Right">
-                <Button Content="Open" Width="60" Margin="2" Command="{Binding OpenCommand}" />
-                <Button Content="Play" Width="60" Margin="2" Command="{Binding PlayCommand}" />
-                <Button Content="Pause" Width="60" Margin="2" Command="{Binding PauseCommand}" />
+                <Button Content="Play" Width="60" Margin="2" Command="{Binding PlayCommand}" IsEnabled="{Binding CanPlay}"/>
+                <Button Content="Pause" Width="60" Margin="2" Command="{Binding PauseCommand}" IsEnabled="{Binding CanPause}" />
+                <Button Content="Mute" Width="60" Margin="2" Command="{Binding MuteCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsMuted, FallbackValue=False}" Value="True">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
+                <Button Content="Unmute" Width="60" Margin="2" Command="{Binding UnmuteCommand}">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource {x:Type Button}}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsMuted, FallbackValue=False}" Value="False">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                </Button>
                 <Button Content="Close" Width="60" Margin="2" Command="{Binding CloseCommand}" />
             </StackPanel>
         </Grid>
