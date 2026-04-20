@@ -7,5 +7,6 @@
              ThemeMode="System">
     <Application.Resources>
         <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+        <local:EnumToBoolConverter x:Key="EnumToBoolConverter" />
     </Application.Resources>
 </Application>

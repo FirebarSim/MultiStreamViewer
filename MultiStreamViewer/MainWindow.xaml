@@ -10,6 +10,7 @@
     <Window.DataContext>
         <local:ResolveExtension Type="{x:Type vm:MainWindowViewModel}" />
     </Window.DataContext>
+
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -19,7 +20,17 @@
             <ColumnDefinition Width="Auto" />
             <ColumnDefinition Width="*" />
         </Grid.ColumnDefinitions>
-        <ListView x:Name="StreamList" Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Streams}" >
+        <Menu Grid.Row="0" Grid.ColumnSpan="2">
+            <MenuItem Header="View">
+                <MenuItem x:Name="Streams_MenuItem" IsCheckable="True" Header="Streams"/>
+            </MenuItem>
+            <MenuItem Header="Layout">
+                <MenuItem Header="Option 1" IsCheckable="True" IsChecked="{Binding SelectedViewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Option1}" Command="{Binding SetLayoutCommand}" CommandParameter="Option1" />
+                <MenuItem Header="Option 2" IsCheckable="True" IsChecked="{Binding SelectedViewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Option2}" Command="{Binding SetLayoutCommand}" CommandParameter="Option2" />
+                <MenuItem Header="Option 3" IsCheckable="True" IsChecked="{Binding SelectedViewMode, Converter={StaticResource EnumToBoolConverter}, ConverterParameter=Option3}" Command="{Binding SetLayoutCommand}" CommandParameter="Option3" />
+            </MenuItem>
+        </Menu>
+        <ListView x:Name="StreamList" Grid.Row="1" Grid.Column="0" ItemsSource="{Binding Streams}" Visibility="{Binding ElementName=Streams_MenuItem, Path=IsChecked, Converter={StaticResource BooleanToVisibilityConverter}}">
             <ListView.ItemTemplate>
                 <DataTemplate>
                     <TextBlock Text="{Binding Name}" MouseMove="TextBlock_MouseMove" Padding="5" />

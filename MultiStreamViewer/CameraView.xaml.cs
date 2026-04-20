@@ -10,10 +10,6 @@ namespace MultiStreamViewer
 	/// </summary>
 	public partial class CameraView : UserControl
 	{
-		FullscreenWindow fullscreenWindow;
-		Panel originalParent;
-
-
 		public CameraView() {
 			InitializeComponent();
 			Loaded += OnLoaded;
