@@ -128,7 +128,9 @@ namespace MultiStreamViewer.ViewModels
 				}
 			};
 
-			//_media.DataFrameReceived += OnDataFrameReceived;
+			//Media.DataFrameReceived += ( s, e ) => {
+			//	System.Diagnostics.Debug.WriteLine( $"CameraViewModel: Data : {e.Frame}" );
+			//};
 
 		}
 
